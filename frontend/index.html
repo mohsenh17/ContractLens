@@ -39,8 +39,11 @@ document.getElementById("uploadForm").addEventListener("submit", async function(
     const data = await response.json();
 
     if (response.ok) {
-        document.getElementById("status").innerText =
-            "Job started! Job ID: " + data.job_id;
+        const statusEl = document.getElementById("status");
+        statusEl.innerHTML =
+            `Job started! <a href="/status/${data.job_id}">
+                View status (Job ID: ${data.job_id})
+            </a>`;
     } else {
         document.getElementById("status").innerText =
             "Error: " + data.error;
