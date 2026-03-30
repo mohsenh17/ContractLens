@@ -38,13 +38,14 @@ def upload():
     pdf_path = os.path.join(UPLOAD_FOLDER, f"{job_id}.pdf")
     file.save(pdf_path)
 
-    jobs[job_id] = {"status": "parsing", "result": None, "error": None}
+    jobs[job_id] = {"status": "parsing", "result": None, "error": None, "parsed_pages": None}
 
     # we should migrate to celery and redis (see if time permits)
     try:
         # Step 1: Parse PDF
         jobs[job_id]["status"] = "parsing"
         pages = parse_pdf(pdf_path)
+        jobs[job_id]["parsed_pages"] = pages
 
         # Step 2: Build vectorstore
         jobs[job_id]["status"] = "indexing"
@@ -73,6 +74,21 @@ def status(job_id):
     if not job:
         return jsonify({"error": "Job not found"}), 404
     return jsonify(job), 200
+
+@app.route("/parsed/<job_id>", methods=["GET"])
+def parsed(job_id):
+    """
+    Get the parsed content for a specific job.
+    """
+    job = jobs.get(job_id)
+    if not job:
+        return jsonify({"error": "Job not found"}), 404
+
+    # Return the parsed content (if available)
+    if job.get("parsed_pages") is None:
+        return jsonify({"error": "Parsing not done yet"}), 202
+
+    return jsonify({"parsed_pages": job["parsed_pages"]}), 200
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
