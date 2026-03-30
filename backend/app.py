@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 
 from parser import parse_pdf
-from vectorstore import build_vectorstore
+from vectorstore import build_vectorstore, get_vectorstore
 from analyzer import analyze_compliance
 
 app = Flask(__name__, template_folder=os.path.join('..', 'frontend'))
@@ -45,7 +45,7 @@ def upload():
         # Step 1: Parse PDF
         jobs[job_id]["status"] = "parsing"
         pages = parse_pdf(pdf_path)
-        jobs[job_id]["parsed_pages"] = pages
+        #jobs[job_id]["parsed_pages"] = pages
 
         # Step 2: Build vectorstore
         jobs[job_id]["status"] = "indexing"
@@ -89,6 +89,37 @@ def parsed(job_id):
         return jsonify({"error": "Parsing not done yet"}), 202
 
     return jsonify({"parsed_pages": job["parsed_pages"]}), 200
+
+
+
+@app.route("/vectorstore_preview/<job_id>", methods=["GET"])
+def vectorstore_preview(job_id):
+    """
+    Returns a limited preview of the vectorstore for a given job_id.
+    Shows first N chunks and their metadata to verify build_vectorstore.
+    """
+    N = 5  # number of chunks to preview
+    try:
+        vs = get_vectorstore(job_id)  # retrieve the Chroma instance
+    except KeyError:
+        return jsonify({"error": f"No vectorstore found for job_id {job_id}"}), 404
+
+    # Access the texts and metadata stored in Chroma
+    # Chroma API: vs._collection.get(include=["documents","metadatas"]) returns dict
+    preview_data = vs._collection.get(
+        include=["documents", "metadatas", "embeddings"], 
+        limit=N
+    )
+
+    # Include embedding dimension in response
+    embedding_dims = [len(e) for e in preview_data["embeddings"]]
+
+    return jsonify({
+        "job_id": job_id,
+        "preview_chunks": preview_data["documents"],
+        "preview_metadata": preview_data["metadatas"],
+        "embedding_dims": embedding_dims
+    }), 200
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
