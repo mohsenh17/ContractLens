@@ -1,55 +1,1120 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>ContractLens Upload</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ContractLens — Compliance Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:       #111010;
+      --paper:     #f5f0e8;
+      --cream:     #ede8dc;
+      --warm:      #e8e0d0;
+      --rule:      #c8bfaa;
+      --rule-lt:   #ddd6c4;
+      --accent:    #c0392b;
+      --accent2:   #1a5276;
+      --gold:      #b7860b;
+      --muted:     #7a7265;
+      --text:      #1c1a17;
+      --text-dim:  #6b6358;
+
+      --fc:  #1a5276;
+      --pc:  #b7860b;
+      --nc:  #c0392b;
+
+      --serif: 'Playfair Display', Georgia, serif;
+      --mono:  'IBM Plex Mono', monospace;
+      --sans:  'IBM Plex Sans', sans-serif;
+    }
+
+    body {
+      background: var(--paper);
+      color: var(--text);
+      font-family: var(--mono);
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* ── PAPER TEXTURE ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── RULED LINES ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        transparent,
+        transparent 27px,
+        var(--rule-lt) 28px
+      );
+      background-size: 100% 28px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    /* ── LAYOUT ── */
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 60px 48px 100px;
+    }
+
+    /* ── MASTHEAD ── */
+    .masthead {
+      border-top: 3px double var(--ink);
+      border-bottom: 3px double var(--ink);
+      padding: 24px 0 20px;
+      margin-bottom: 0;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .logo-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .logo-wordmark {
+      font-family: var(--serif);
+      font-size: 42px;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: -.02em;
+      line-height: 1;
+      color: var(--ink);
+    }
+
+    .logo-wordmark em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .logo-rule {
+      height: 2px;
+      background: var(--ink);
+      width: 100%;
+    }
+
+    .logo-sub {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .masthead-right {
+      text-align: right;
+    }
+
+    .edition-text {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    /* ── HEADLINE SECTION ── */
+    .headline-block {
+      border-bottom: 1px solid var(--rule);
+      padding: 40px 0 32px;
+      margin-bottom: 40px;
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 40px;
+      align-items: start;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: clamp(32px, 4.5vw, 52px);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -.01em;
+    }
+
+    h1 .drop-cap::first-letter {
+      float: left;
+      font-size: 5em;
+      line-height: .76;
+      padding-right: .08em;
+      margin-top: .05em;
+      color: var(--accent);
+      font-family: var(--serif);
+    }
+
+    .headline-aside {
+      padding-left: 32px;
+      border-left: 1px solid var(--rule);
+    }
+
+    .aside-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .aside-text {
+      font-family: var(--sans);
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    /* ── UPLOAD ZONE ── */
+    .upload-zone {
+      border: 1.5px dashed var(--rule);
+      border-radius: 2px;
+      padding: 44px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      background: var(--cream);
+      position: relative;
+      margin-bottom: 16px;
+    }
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(192, 57, 43, .03);
+    }
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .upload-icon {
+      font-family: var(--serif);
+      font-size: 36px;
+      font-style: italic;
+      color: var(--muted);
+      margin-bottom: 12px;
+      opacity: .4;
+      line-height: 1;
+    }
+
+    .upload-label {
+      font-family: var(--serif);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .upload-hint {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .file-selected {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: var(--cream);
+      border: 1px solid var(--rule);
+      border-left: 3px solid var(--accent2);
+      border-radius: 2px;
+      padding: 12px 16px;
+      font-size: 12px;
+      margin-bottom: 16px;
+      font-family: var(--mono);
+    }
+    .file-selected.show { display: flex; }
+    .file-selected .fname { color: var(--accent2); }
+    .file-selected .fsize { color: var(--muted); margin-left: auto; }
+
+    /* ── BUTTON ── */
+    .btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      padding: 16px 28px;
+      border: 1.5px solid var(--ink);
+      border-radius: 2px;
+      cursor: pointer;
+      transition: background .15s, color .15s, transform .1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn:active { transform: scale(.99); }
+    .btn:disabled { opacity: .35; cursor: not-allowed; }
+    .btn-primary {
+      background: var(--ink);
+      color: var(--paper);
+      width: 100%;
+      justify-content: center;
+    }
+    .btn-primary:not(:disabled):hover {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* ── PROGRESS ── */
+    #progress-section { display: none; margin: 28px 0; }
+    #progress-section.show { display: block; }
+
+    .status-bar {
+      background: var(--cream);
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      padding: 20px 24px;
+    }
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 1.5px solid var(--rule);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status-text {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+      letter-spacing: .04em;
+    }
+    .status-steps {
+      display: flex;
+      gap: 0;
+    }
+    .step {
+      flex: 1;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--rule);
+      padding: 6px 0 6px 14px;
+      border-left: 2px solid var(--rule-lt);
+      transition: color .3s, border-color .3s;
+    }
+    .step:first-child { padding-left: 0; border-left: none; }
+    .step.active { color: var(--accent); border-color: var(--accent); }
+    .step.done { color: var(--muted); border-color: var(--muted); }
+
+    /* ── ERROR ── */
+    .error-box {
+      display: none;
+      background: rgba(192, 57, 43, .05);
+      border: 1px solid rgba(192, 57, 43, .25);
+      border-left: 3px solid var(--accent);
+      border-radius: 2px;
+      padding: 14px 18px;
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--accent);
+      margin-bottom: 24px;
+    }
+    .error-box.show { display: block; }
+
+    /* ── RESULTS ── */
+    #results-section { display: none; }
+    #results-section.show { display: block; }
+
+    .results-masthead {
+      border-top: 3px double var(--ink);
+      border-bottom: 1px solid var(--rule);
+      padding: 18px 0 14px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+    }
+
+    .results-title {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 700;
+      font-style: italic;
+    }
+    .results-meta {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    /* ── SUMMARY ROW ── */
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--rule-lt);
+      border: 1px solid var(--rule-lt);
+      border-radius: 2px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .summary-cell {
+      background: var(--cream);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .summary-count {
+      font-family: var(--serif);
+      font-size: 36px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .summary-count.fc { color: var(--fc); }
+    .summary-count.pc { color: var(--pc); }
+    .summary-count.nc { color: var(--nc); }
+
+    .summary-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── VIEW TOGGLE ── */
+    .view-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 20px;
+      border: 1px solid var(--rule-lt);
+      border-radius: 2px;
+      overflow: hidden;
+      width: fit-content;
+    }
+    .view-toggle-btn {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      border: none;
+      background: var(--cream);
+      color: var(--muted);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      border-right: 1px solid var(--rule-lt);
+    }
+    .view-toggle-btn:last-child { border-right: none; }
+    .view-toggle-btn.active {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    /* ── COMPLIANCE TABLE ── */
+    .table-wrap {
+      display: none;
+      overflow-x: auto;
+      border: 1px solid var(--rule-lt);
+      border-radius: 2px;
+      margin-bottom: 12px;
+    }
+    .table-wrap.show { display: block; }
+
+    .compliance-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--sans);
+      font-size: 12px;
+      min-width: 700px;
+    }
+
+    .compliance-table thead tr {
+      background: var(--ink);
+    }
+
+    .compliance-table thead th {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--paper);
+      padding: 11px 14px;
+      text-align: left;
+      font-weight: 400;
+      white-space: nowrap;
+      border-right: 1px solid rgba(255,255,255,.08);
+    }
+    .compliance-table thead th:last-child { border-right: none; }
+
+    .compliance-table tbody tr {
+      border-bottom: 1px solid var(--rule-lt);
+      transition: background .15s;
+    }
+    .compliance-table tbody tr:last-child { border-bottom: none; }
+    .compliance-table tbody tr:hover { background: rgba(200,192,170,.18); }
+    .compliance-table tbody tr:nth-child(even) { background: rgba(237,232,220,.5); }
+    .compliance-table tbody tr:nth-child(even):hover { background: rgba(200,192,170,.18); }
+
+    .compliance-table td {
+      padding: 13px 14px;
+      vertical-align: top;
+      border-right: 1px solid var(--rule-lt);
+      line-height: 1.6;
+      color: var(--text-dim);
+      font-weight: 300;
+    }
+    .compliance-table td:last-child { border-right: none; }
+
+    .td-question {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      min-width: 180px;
+      max-width: 200px;
+    }
+
+    .td-state { white-space: nowrap; }
+
+    .td-confidence {
+      font-family: var(--mono);
+      font-size: 11px;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .td-confidence .conf-bar {
+      display: block;
+      height: 3px;
+      background: var(--rule-lt);
+      border-radius: 1px;
+      margin-top: 5px;
+      overflow: hidden;
+    }
+    .td-confidence .conf-fill {
+      height: 100%;
+      border-radius: 1px;
+      background: var(--muted);
+      transition: width .4s ease;
+    }
+    .conf-fill.fc { background: var(--fc); }
+    .conf-fill.pc { background: var(--pc); }
+    .conf-fill.nc { background: var(--nc); }
+
+    .td-quotes {
+      font-family: var(--serif);
+      font-size: 11px;
+      font-style: italic;
+      color: var(--text-dim);
+      min-width: 180px;
+      max-width: 240px;
+    }
+    .td-quotes span {
+      display: block;
+      padding: 3px 0;
+      border-bottom: 1px dotted var(--rule-lt);
+      line-height: 1.55;
+    }
+    .td-quotes span:last-child { border-bottom: none; }
+
+    .td-rationale {
+      font-size: 12px;
+      min-width: 200px;
+      max-width: 260px;
+    }
+
+    /* ── COMPLIANCE CARD ── */
+    .card {
+      background: var(--cream);
+      border: 1px solid var(--rule-lt);
+      border-radius: 2px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .card:hover { border-color: var(--rule); box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      cursor: pointer;
+      gap: 14px;
+      user-select: none;
+    }
+    .card-num {
+      font-family: var(--serif);
+      font-size: 13px;
+      font-style: italic;
+      color: var(--rule);
+      width: 18px;
+      flex-shrink: 0;
+    }
+    .card-title {
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 500;
+      flex: 1;
+      color: var(--text);
+    }
+
+    .badge {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 4px 9px;
+      border-radius: 1px;
+      flex-shrink: 0;
+    }
+    .badge-fc { background: rgba(26, 82, 118, .08); color: var(--fc); border: 1px solid rgba(26,82,118,.18); }
+    .badge-pc { background: rgba(183, 134, 11, .08); color: var(--pc); border: 1px solid rgba(183,134,11,.18); }
+    .badge-nc { background: rgba(192, 57, 43, .08); color: var(--nc); border: 1px solid rgba(192,57,43,.18); }
+
+    .confidence {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      flex-shrink: 0;
+      min-width: 42px;
+      text-align: right;
+    }
+    .chevron {
+      font-size: 9px;
+      color: var(--rule);
+      transition: transform .2s;
+      flex-shrink: 0;
+    }
+    .card.open .chevron { transform: rotate(180deg); }
+
+    .card-body {
+      display: none;
+      padding: 0 20px 20px;
+      border-top: 1px solid var(--rule-lt);
+    }
+    .card.open .card-body { display: block; }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 16px 0 8px;
+    }
+
+    .quotes-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .quotes-list li {
+      font-family: var(--serif);
+      font-size: 13px;
+      font-style: italic;
+      color: var(--text-dim);
+      padding: 10px 16px;
+      border-left: 2px solid var(--accent2);
+      background: rgba(245,240,232,.7);
+      line-height: 1.65;
+    }
+
+    .rationale-text {
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--text-dim);
+      line-height: 1.75;
+      padding: 12px 14px;
+      background: rgba(245,240,232,.5);
+      border-radius: 2px;
+    }
+
+    /* ── CHAT CTA ── */
+    .chat-cta {
+      display: none;
+      margin-top: 32px;
+      padding: 22px 24px;
+      background: var(--ink);
+      border-radius: 2px;
+      align-items: center;
+      gap: 20px;
+    }
+    .chat-cta.show { display: flex; }
+    .chat-cta-text { flex: 1; }
+    .chat-cta-title {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-weight: 700;
+      font-style: italic;
+      color: var(--paper);
+      margin-bottom: 4px;
+    }
+    .chat-cta-sub {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(245,240,232,.4);
+      letter-spacing: .04em;
+    }
+    .btn-chat {
+      background: transparent;
+      border: 1px solid rgba(245,240,232,.25);
+      color: var(--paper);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      padding: 11px 18px;
+      border-radius: 2px;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: border-color .15s, background .15s;
+    }
+    .btn-chat:hover {
+      border-color: var(--paper);
+      background: rgba(245,240,232,.06);
+    }
+
+    /* ── DIVIDER ── */
+    .ornament-divider {
+      text-align: center;
+      color: var(--rule);
+      margin: 40px 0;
+      letter-spacing: .5em;
+      font-size: 11px;
+    }
+
+    /* ── FOOTER RULE ── */
+    .footer-rule {
+      border-top: 3px double var(--rule);
+      margin-top: 60px;
+      padding-top: 14px;
+    }
+
+    .footer-text {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--rule);
+      text-align: center;
+    }
+
+    /* ── ANIMATIONS ── */
+    .fade-in { animation: fadeIn .5s ease both; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card { animation: fadeIn .35s ease both; }
+    .card:nth-child(1) { animation-delay: .04s; }
+    .card:nth-child(2) { animation-delay: .08s; }
+    .card:nth-child(3) { animation-delay: .12s; }
+    .card:nth-child(4) { animation-delay: .16s; }
+    .card:nth-child(5) { animation-delay: .20s; }
+
+    /* ── SIDE COLUMN ACCENT ── */
+    .margin-note {
+      writing-mode: vertical-rl;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--rule);
+      position: fixed;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%) rotate(180deg);
+      z-index: 2;
+    }
+
+    @media (max-width: 680px) {
+      .wrap { padding: 36px 24px 80px; }
+      .headline-block { grid-template-columns: 1fr; }
+      .headline-aside { border-left: none; border-top: 1px solid var(--rule); padding: 20px 0 0; margin-top: 0; }
+      .summary-row { grid-template-columns: 1fr; }
+      .margin-note { display: none; }
+    }
+  </style>
 </head>
 <body>
 
-<h2>Upload Contract PDF</h2>
+<div class="margin-note">Contract Intelligence · Est. 2025</div>
 
-<form id="uploadForm">
-    <input type="file" id="fileInput" accept=".pdf" required />
-    <button type="submit">Upload</button>
-</form>
+<div class="wrap">
 
-<p id="status"></p>
+  <!-- MASTHEAD -->
+  <div class="masthead">
+    <div class="logo-block">
+      <div class="logo-wordmark">Contract<em>Lens</em></div>
+      <div class="logo-sub">Third-Party Compliance Analysis System</div>
+    </div>
+    <div class="masthead-right">
+      <div class="edition-text">
+        Automated Review<br>
+        Security & Compliance<br>
+        ——————————
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADLINE -->
+  <div class="headline-block">
+    <div>
+      <h1><span class="drop-cap">Upload your contract.<br>We'll read the fine print.</span></h1>
+    </div>
+    <div class="headline-aside">
+      <div class="aside-label">About this tool</div>
+      <p class="aside-text">ContractLens parses third-party contract PDFs and assesses compliance across five security requirements—surfacing relevant clauses, rationale, and confidence scores so your legal and security teams can move faster.</p>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="upload-zone" id="dropZone">
+    <input type="file" id="fileInput" accept=".pdf" />
+    <div class="upload-icon">§</div>
+    <div class="upload-label">Drop PDF contract here, or click to browse</div>
+    <div class="upload-hint">PDF only · Max 50 MB</div>
+  </div>
+
+  <div class="file-selected" id="fileSelected">
+    <span style="color:var(--muted); font-size:11px;">DOC</span>
+    <span class="fname" id="fileName"></span>
+    <span class="fsize" id="fileSize"></span>
+  </div>
+
+  <button class="btn btn-primary" id="analyzeBtn" disabled onclick="startAnalysis()">
+    <span>Analyze Contract</span>
+    <span style="opacity:.4">→</span>
+  </button>
+
+  <!-- PROGRESS -->
+  <div id="progress-section">
+    <div class="status-bar">
+      <div class="status-row">
+        <div class="spinner" id="spinner"></div>
+        <div class="status-text" id="statusText">Initializing…</div>
+      </div>
+      <div class="status-steps">
+        <div class="step" id="step-parsing">Parsing PDF</div>
+        <div class="step" id="step-indexing">Indexing</div>
+        <div class="step" id="step-analyzing">Analyzing</div>
+        <div class="step" id="step-done">Complete</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- RESULTS -->
+  <div id="results-section">
+
+    <div class="ornament-divider">— ◆ —</div>
+
+    <div class="results-masthead">
+      <div class="results-title">Compliance Report</div>
+      <div class="results-meta" id="resultsMeta"></div>
+    </div>
+
+    <!-- SUMMARY ROW -->
+    <div class="summary-row" id="summaryRow">
+      <div class="summary-cell">
+        <div class="summary-count fc" id="cnt-fc">—</div>
+        <div class="summary-label">Fully Compliant</div>
+      </div>
+      <div class="summary-cell">
+        <div class="summary-count pc" id="cnt-pc">—</div>
+        <div class="summary-label">Partially Compliant</div>
+      </div>
+      <div class="summary-cell">
+        <div class="summary-count nc" id="cnt-nc">—</div>
+        <div class="summary-label">Non-Compliant</div>
+      </div>
+    </div>
+
+    <!-- VIEW TOGGLE -->
+    <div class="view-toggle" id="viewToggle">
+      <button class="view-toggle-btn active" onclick="switchView('cards', this)">Cards</button>
+      <button class="view-toggle-btn" onclick="switchView('table', this)">Table</button>
+    </div>
+
+    <!-- TABLE VIEW -->
+    <div class="table-wrap" id="tableView">
+      <table class="compliance-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Compliance Question</th>
+            <th>Compliance State</th>
+            <th>Confidence</th>
+            <th>Relevant Quotes</th>
+            <th>Rationale</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- CARDS VIEW -->
+    <div id="cardsContainer"></div>
+
+    <div class="chat-cta" id="chatCta">
+      <div class="chat-cta-text">
+        <div class="chat-cta-title">Ask questions about this contract</div>
+        <div class="chat-cta-sub">Chat with the document to dig deeper into specific clauses</div>
+      </div>
+      <a class="btn-chat" id="chatLink" href="#">Open Chat →</a>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-rule">
+    <div class="footer-text">ContractLens · Automated Compliance Intelligence · All analysis is advisory</div>
+  </div>
+
+</div>
 
 <script>
-document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+  let currentJobId = null;
+  let pollTimer = null;
+
+  const fileInput = document.getElementById('fileInput');
+  const dropZone  = document.getElementById('dropZone');
+
+  fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
     e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
 
-    const fileInput = document.getElementById("fileInput");
+  function handleFile(file) {
+    if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+      showError('Please select a valid PDF file.');
+      return;
+    }
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatBytes(file.size);
+    document.getElementById('fileSelected').classList.add('show');
+    document.getElementById('analyzeBtn').disabled = false;
+    hideError();
+  }
+
+  async function startAnalysis() {
     const file = fileInput.files[0];
+    if (!file) return;
+    document.getElementById('analyzeBtn').disabled = true;
+    document.getElementById('progress-section').classList.add('show');
+    document.getElementById('results-section').classList.remove('show');
+    hideError();
+    setStep('parsing');
 
-    if (!file) {
-        alert("Please select a PDF");
-        return;
+    const fd = new FormData();
+    fd.append('file', file);
+
+    try {
+      const res = await fetch('/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) { showError(data.error || 'Upload failed.'); return; }
+      currentJobId = data.job_id;
+      pollStatus(currentJobId);
+    } catch (err) {
+      showError('Network error: ' + err.message);
     }
+  }
 
-    const formData = new FormData();
-    formData.append("file", file);
+  function pollStatus(jobId) {
+    pollTimer = setInterval(async () => {
+      try {
+        const res  = await fetch(`/status/${jobId}`);
+        const data = await res.json();
+        if (data.status === 'parsing')   setStep('parsing');
+        if (data.status === 'indexing')  setStep('indexing');
+        if (data.status === 'analyzing') setStep('analyzing');
+        if (data.status === 'done') {
+          clearInterval(pollTimer);
+          setStep('done');
+          document.getElementById('spinner').style.display = 'none';
+          document.getElementById('statusText').textContent = 'Analysis complete';
+          renderResults(data.result, jobId);
+        }
+        if (data.status === 'error') {
+          clearInterval(pollTimer);
+          showError('Analysis error: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        clearInterval(pollTimer);
+        showError('Polling error: ' + err.message);
+      }
+    }, 1500);
+  }
 
-    document.getElementById("status").innerText = "Uploading...";
+  function renderResults(report, jobId) {
+    const section = document.getElementById('results-section');
+    section.classList.add('show', 'fade-in');
 
-    const response = await fetch("/upload", {
-        method: "POST",
-        body: formData
-    });
+    const counts = { 'Fully Compliant': 0, 'Partially Compliant': 0, 'Non-Compliant': 0 };
+    report.results.forEach(r => { if (counts[r.compliance_state] !== undefined) counts[r.compliance_state]++; });
 
-    const data = await response.json();
+    document.getElementById('cnt-fc').textContent = counts['Fully Compliant'];
+    document.getElementById('cnt-pc').textContent = counts['Partially Compliant'];
+    document.getElementById('cnt-nc').textContent = counts['Non-Compliant'];
 
-    if (response.ok) {
-        const statusEl = document.getElementById("status");
-        statusEl.innerHTML =
-            `Job started! <a href="/status/${data.job_id}">
-                View status (Job ID: ${data.job_id})
-            </a>`;
+    document.getElementById('resultsMeta').textContent =
+      `${report.results.length} requirements assessed`;
+
+    const container = document.getElementById('cardsContainer');
+    container.innerHTML = '';
+    report.results.forEach((r, i) => container.appendChild(buildCard(r, i + 1)));
+
+    // Build table rows
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+    report.results.forEach((r, i) => tbody.appendChild(buildTableRow(r, i + 1)));
+
+    document.getElementById('chatLink').href = `/chat/${jobId}`;
+    document.getElementById('chatCta').classList.add('show');
+  }
+
+  function buildTableRow(r, num) {
+    const stateKey = r.compliance_state.toLowerCase().replace(/ /g, '-');
+    const cls = stateKey === 'fully-compliant' ? 'fc' : stateKey === 'partially-compliant' ? 'pc' : 'nc';
+    const quotesHtml = (r.relevant_quotes && r.relevant_quotes.length)
+      ? r.relevant_quotes.map(q => `<span>${escHtml(q)}</span>`).join('')
+      : '<span style="font-style:normal;color:var(--rule)">—</span>';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-family:var(--serif);font-style:italic;color:var(--rule);text-align:center;width:28px;">${num}</td>
+      <td class="td-question">${escHtml(r.question_title)}</td>
+      <td class="td-state"><span class="badge badge-${cls}">${escHtml(r.compliance_state)}</span></td>
+      <td class="td-confidence">
+        ${r.confidence}%
+        <span class="conf-bar"><span class="conf-fill ${cls}" style="width:${r.confidence}%"></span></span>
+      </td>
+      <td class="td-quotes">${quotesHtml}</td>
+      <td class="td-rationale">${escHtml(r.rationale)}</td>`;
+    return tr;
+  }
+
+  function switchView(view, btn) {
+    document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (view === 'table') {
+      document.getElementById('tableView').classList.add('show');
+      document.getElementById('cardsContainer').style.display = 'none';
     } else {
-        document.getElementById("status").innerText =
-            "Error: " + data.error;
+      document.getElementById('tableView').classList.remove('show');
+      document.getElementById('cardsContainer').style.display = '';
     }
-});
-</script>
+  }
 
+  function buildCard(r, num) {
+    const stateKey = r.compliance_state.toLowerCase().replace(/ /g, '-');
+    const cls = stateKey === 'fully-compliant' ? 'fc' : stateKey === 'partially-compliant' ? 'pc' : 'nc';
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-header" onclick="toggleCard(this)">
+        <span class="card-num">${num}.</span>
+        <span class="card-title">${r.question_title}</span>
+        <span class="badge badge-${cls}">${r.compliance_state}</span>
+        <span class="confidence">${r.confidence}%</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="card-body">
+        ${r.relevant_quotes && r.relevant_quotes.length ? `
+          <div class="section-label">Relevant Clauses</div>
+          <ul class="quotes-list">
+            ${r.relevant_quotes.map(q => `<li>${escHtml(q)}</li>`).join('')}
+          </ul>` : ''}
+        <div class="section-label">Rationale</div>
+        <div class="rationale-text">${escHtml(r.rationale)}</div>
+      </div>`;
+    return card;
+  }
+
+  function toggleCard(header) {
+    header.parentElement.classList.toggle('open');
+  }
+
+  const stepOrder = ['parsing', 'indexing', 'analyzing', 'done'];
+  function setStep(current) {
+    const labels = {
+      parsing:   'Extracting text and tables from PDF…',
+      indexing:  'Chunking and building vector index…',
+      analyzing: 'Running compliance analysis…',
+      done:      'Analysis complete',
+    };
+    document.getElementById('statusText').textContent = labels[current] || current;
+    const idx = stepOrder.indexOf(current);
+    stepOrder.forEach((s, i) => {
+      const el = document.getElementById(`step-${s}`);
+      el.className = 'step' + (i < idx ? ' done' : i === idx ? ' active' : '');
+    });
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorBox');
+    el.textContent = '⚠ ' + msg;
+    el.classList.add('show');
+    document.getElementById('progress-section').classList.remove('show');
+    document.getElementById('analyzeBtn').disabled = false;
+  }
+  function hideError() { document.getElementById('errorBox').classList.remove('show'); }
+
+  function formatBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+    return (b/1048576).toFixed(1) + ' MB';
+  }
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
 </body>
 </html>
