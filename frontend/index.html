@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ContractLens Upload</title>
+</head>
+<body>
+
+<h2>Upload Contract PDF</h2>
+
+<form id="uploadForm">
+    <input type="file" id="fileInput" accept=".pdf" required />
+    <button type="submit">Upload</button>
+</form>
+
+<p id="status"></p>
+
+<script>
+document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const fileInput = document.getElementById("fileInput");
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert("Please select a PDF");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    document.getElementById("status").innerText = "Uploading...";
+
+    const response = await fetch("/upload", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        document.getElementById("status").innerText =
+            "Job started! Job ID: " + data.job_id;
+    } else {
+        document.getElementById("status").innerText =
+            "Error: " + data.error;
+    }
+});
+</script>
+
+</body>
+</html>
