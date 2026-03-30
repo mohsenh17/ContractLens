@@ -121,5 +121,50 @@ def vectorstore_preview(job_id):
         "embedding_dims": embedding_dims
     }), 200
 
+
+
+@app.route("/chat/<job_id>", methods=["GET", "POST"])
+def chat(job_id):
+    """
+    Combined route:
+    - Renders the HTML page if accessed without 'question'.
+    - Returns JSON answer if 'question' is provided (GET or POST).
+    """
+    if job_id not in jobs or jobs[job_id]["status"] != "done":
+        return "Document not ready or not found", 400
+
+    # Determine if user submitted a question (GET query or POST JSON)
+    question = ""
+    if request.method == "POST":
+        data = request.get_json()
+        question = data.get("question", "").strip() if data else ""
+    else:  # GET
+        question = request.args.get("question", "").strip()
+
+    # If no question, render the page
+    if not question:
+        return render_template("chat.html", job_id=job_id)
+
+    # Process question and return JSON answer
+    try:
+        vs = get_vectorstore(job_id)
+        docs = vs.similarity_search(question, k=4)
+        context = "\n\n".join(d.page_content for d in docs)
+
+        from langchain_ollama import OllamaLLM
+        llm = OllamaLLM(model="llama3")
+        prompt = (
+            f"You are a contract analyst. Answer the question using ONLY the excerpts below.\n\n"
+            f"Excerpts:\n{context}\n\n"
+            f"Question: {question}\n\nAnswer:"
+        )
+        answer = llm.invoke(prompt)
+        return jsonify({"answer": answer}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
