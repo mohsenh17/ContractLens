@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contract Q&A</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            max-width: 800px;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        #answer {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ask About the Contract</h1>
+
+    <form id="question-form">
+        <label for="question">Your Question:</label>
+        <textarea id="question" name="question" rows="3" placeholder="Type your question here..."></textarea>
+        <button type="submit">Submit</button>
+    </form>
+
+    <h2>Answer:</h2>
+    <div id="answer">The answer will appear here.</div>
+
+    <script>
+        const form = document.getElementById('question-form');
+        const answerDiv = document.getElementById('answer');
+        const jobId = "{{ job_id }}";  // Pass job_id from Flask
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const question = document.getElementById('question').value.trim();
+            if (!question) {
+                alert("Please enter a question.");
+                return;
+            }
+
+            answerDiv.textContent = "Fetching answer...";
+
+            try {
+                const response = await fetch(`/chat/${jobId}?question=${encodeURIComponent(question)}`);
+                const data = await response.json();
+                if (response.ok) {
+                    answerDiv.textContent = data.answer;
+                } else {
+                    answerDiv.textContent = "Error: " + data.error;
+                }
+            } catch (err) {
+                answerDiv.textContent = "Error: " + err.message;
+            }
+        });
+    </script>
+</body>
+</html>
