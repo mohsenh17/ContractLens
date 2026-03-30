@@ -63,6 +63,16 @@ def upload():
 
     return jsonify({"job_id": job_id}), 202
 
+@app.route("/status/<job_id>", methods=["GET"])
+def status(job_id):
+    """
+    Poll this endpoint to check job progress.
+    Returns status + result when done.
+    """
+    job = jobs.get(job_id)
+    if not job:
+        return jsonify({"error": "Job not found"}), 404
+    return jsonify(job), 200
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
