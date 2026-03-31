@@ -3,6 +3,12 @@
 ContractLens is a system for **automated compliance analysis of PDF contracts**.  
 It parses PDF contracts, builds a vectorstore of their contents, and evaluates compliance using a language model (Ollama / llama3) with pre-defined rules. The system supports uploading contracts, checking processing status, and querying contract contents via a chat interface.
 
+## Live Demo
+
+You can access the project online here:  
+[https://avis-kingliest-unjustifiably.ngrok-free.dev/](https://avis-kingliest-unjustifiably.ngrok-free.dev/)
+
+
 ## Features
 
 - PDF parsing and table extraction
