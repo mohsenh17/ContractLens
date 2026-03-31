@@ -1,0 +1,19 @@
+from celery import Celery
+
+celery = Celery(
+    "contractlens",
+    broker="redis://localhost:6379/0",
+    backend="redis://localhost:6379/0",
+    include=["tasks"],
+)
+
+celery.conf.update(
+    task_serializer="json",
+    result_serializer="json",
+    accept_content=["json"],
+    timezone="UTC",
+    enable_utc=True,
+    task_track_started=True,
+    task_acks_late=True,           # re-queue if worker dies mid-task
+    worker_prefetch_multiplier=1,  # one task per worker at a time
+)
