@@ -11,3 +11,4 @@ nbsphinx==0.9.5
 ipython
 jupyter
 myst-parser
+sphinx-autodoc-typehints
