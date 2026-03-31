@@ -32,7 +32,11 @@ Getting Started
 
 .. code-block:: bash
 
-    pip install -r requirements.txt
+    # Create the environment from the YAML
+    conda env create -f environment.yml
+
+    # Activate it
+    conda activate <env_name_from_yaml>
 
 **Running the project:**
 
