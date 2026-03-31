@@ -1,0 +1,25 @@
+# Sphinx itself
+sphinx
+
+# Theme for RTD
+sphinx-rtd-theme
+
+# Extensions you listed
+myst-parser
+sphinx-autodoc-typehints
+sphinx-copybutton
+
+# Optional Sphinx helpers
+sphinxcontrib-applehelp
+sphinxcontrib-bibtex
+sphinxcontrib-devhelp
+sphinxcontrib-htmlhelp
+sphinxcontrib-jquery
+sphinxcontrib-jsmath
+sphinxcontrib-qthelp
+sphinxcontrib-serializinghtml
+
+# Notebook support if using nbsphinx / Jupyter
+nbsphinx
+ipython
+jupyter
