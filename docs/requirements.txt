@@ -1,14 +1,25 @@
-sphinx-rtd-theme==3.0.2
-sphinxcontrib-applehelp==2.0.0
-sphinxcontrib-bibtex==2.6.3
-sphinxcontrib-devhelp==2.0.0
-sphinxcontrib-htmlhelp==2.1.0
-sphinxcontrib-jquery==4.1
-sphinxcontrib-jsmath==1.0.1
-sphinxcontrib-qthelp==2.0.0
-sphinxcontrib-serializinghtml==2.0.0
-nbsphinx==0.9.5
-ipython
-jupyter
+# Sphinx itself
+sphinx
+
+# Theme for RTD
+sphinx-rtd-theme
+
+# Extensions you listed
 myst-parser
 sphinx-autodoc-typehints
+sphinx-copybutton
+
+# Optional Sphinx helpers
+sphinxcontrib-applehelp
+sphinxcontrib-bibtex
+sphinxcontrib-devhelp
+sphinxcontrib-htmlhelp
+sphinxcontrib-jquery
+sphinxcontrib-jsmath
+sphinxcontrib-qthelp
+sphinxcontrib-serializinghtml
+
+# Notebook support if using nbsphinx / Jupyter
+nbsphinx
+ipython
+jupyter
