@@ -3,29 +3,24 @@ vectorstore.py
 --------------
 Chunks parsed PDF pages and stores them.
 Each upload gets its own collection keyed by job_id.
-
 """
 
+import os
 from typing import List, Dict, Any
 import chromadb
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_ollama import OllamaEmbeddings
 from langchain_chroma import Chroma
 
-_chroma_client = chromadb.Client()
-
-_vectorstores: Dict[str, Chroma] = {}
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CHROMA_DIR = os.path.join(BASE_DIR, "chroma_store")
 
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
-EMBED_MODEL = "nomic-embed-text" 
+EMBED_MODEL = "nomic-embed-text"
 
 
 def _get_embeddings():
-    """
-    Returns OllamaEmbeddings using nomic-embed-text.
-    Raises a clear error if Ollama isn't running or model isn't pulled.
-    """
     return OllamaEmbeddings(model=EMBED_MODEL)
 
 
@@ -38,9 +33,11 @@ def build_vectorstore(job_id: str, pages: List[Dict[str, Any]]) -> Chroma:
         pages: Output of parser.parse_pdf()
 
     Returns:
-        Chroma vectorstore instance (also stored in _vectorstores registry).
+        Chroma vectorstore instance.
     """
-    # Build flat list of text chunks with metadata
+    # Create client fresh in this process — avoids SQLite issues with forked workers
+    chroma_client = chromadb.PersistentClient(path=CHROMA_DIR)
+
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=CHUNK_SIZE,
         chunk_overlap=CHUNK_OVERLAP,
@@ -53,18 +50,15 @@ def build_vectorstore(job_id: str, pages: List[Dict[str, Any]]) -> Chroma:
     for page in pages:
         page_num = page["page_num"]
 
-        # Chunk the main text
         if page["text"].strip():
             chunks = splitter.split_text(page["text"])
             for chunk in chunks:
                 all_chunks.append(chunk)
                 all_metadatas.append({"page": page_num, "type": "text"})
 
-        # Add table content as concatenated text chunks
         for t_idx, table in enumerate(page.get("tables", [])):
             table_text = _table_to_text(table)
             if table_text.strip():
-                # assume tables are short enough !!!
                 all_chunks.append(table_text)
                 all_metadatas.append({
                     "page": page_num,
@@ -77,27 +71,37 @@ def build_vectorstore(job_id: str, pages: List[Dict[str, Any]]) -> Chroma:
 
     embeddings = _get_embeddings()
 
-    # Use job_id as the Chroma collection name (must be unique per upload)
-    vs = Chroma.from_texts(
-        texts=all_chunks,
-        embedding=embeddings,
-        metadatas=all_metadatas,
-        collection_name=job_id,
-        client=_chroma_client,
-    )
+    # Batch to avoid memory spikes on large contracts
+    BATCH_SIZE = 25
+    vs = None
+    for i in range(0, len(all_chunks), BATCH_SIZE):
+        batch_texts = all_chunks[i:i + BATCH_SIZE]
+        batch_metas = all_metadatas[i:i + BATCH_SIZE]
 
-    _vectorstores[job_id] = vs
+        if vs is None:
+            vs = Chroma.from_texts(
+                texts=batch_texts,
+                embedding=embeddings,
+                metadatas=batch_metas,
+                collection_name=job_id,
+                client=chroma_client,
+            )
+        else:
+            vs.add_texts(texts=batch_texts, metadatas=batch_metas)
+
     return vs
 
 
 def get_vectorstore(job_id: str) -> Chroma:
     """
-    Retrieve the vectorstore for a given job_id.
-    Raises KeyError if the job hasn't been indexed yet.
+    Retrieve the vectorstore for a given job_id from disk.
     """
-    if job_id not in _vectorstores:
-        raise KeyError(f"No vectorstore found for job_id: {job_id}")
-    return _vectorstores[job_id]
+    chroma_client = chromadb.PersistentClient(path=CHROMA_DIR)
+    return Chroma(
+        collection_name=job_id,
+        embedding_function=_get_embeddings(),
+        client=chroma_client,
+    )
 
 
 def _table_to_text(table: List[List[str]]) -> str:
