@@ -5,10 +5,6 @@ It parses PDF contracts, builds a vectorstore of their contents, and evaluates c
 
 ## Live Demo
 
-You can access the project online here:  
-[https://avis-kingliest-unjustifiably.ngrok-free.dev/](https://avis-kingliest-unjustifiably.ngrok-free.dev/)
-
-
 ## Features
 
 - PDF parsing and table extraction
